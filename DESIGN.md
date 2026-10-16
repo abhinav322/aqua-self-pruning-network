@@ -414,6 +414,137 @@ The sparse inference implementation favors transparency and correctness over hig
 
 A compiled sparse kernel or larger model could produce a different performance trade-off, but that has not been demonstrated here.
 
+## Autodiff Engine Bottlenecks and Optimization Strategy
+
+The custom autodiff engine prioritizes numerical correctness, simplicity, and inspectability over runtime performance.
+
+**Current bottlenecks**
+
+1. **Python graph construction overhead:** Every differentiable operation creates a Tensor object, parent references, and a Python backward closure. This introduces object-allocation and function-dispatch costs.
+
+2. **Recursive topological traversal:** The backward pass performs a depth-first traversal of the computation graph. Its time complexity is linear in the number of graph nodes and edges, but deeply nested graphs may encounter Python recursion limits.
+
+3. **Intermediate memory allocations:** Forward operations and gradient calculations allocate NumPy arrays. Broadcasting-aware gradient reduction may create additional temporary arrays.
+
+4. **Lack of operation fusion:** Element-wise operations are executed separately instead of being combined into fused kernels. This can increase memory traffic and Python overhead.
+
+5. **Limited hardware acceleration:** NumPy delegates certain numerical operations to optimized native libraries, but the autodiff graph itself is managed in Python and does not provide GPU execution or compiled backward kernels.
+
+**Potential optimizations**
+
+- Replace recursive graph traversal with an iterative topological sorting algorithm.
+- Reduce unnecessary intermediate arrays and reuse buffers where safe.
+- Fuse frequently occurring element-wise operations.
+- Cache execution plans for reusable computation graph structures.
+- Use compiled kernels for performance-critical forward and backward operations.
+- Introduce memory-efficient handling of intermediate activations, including selective recomputation where appropriate.
+
+**Optimization priorities**
+
+The first step would be profiling representative training workloads rather than assuming that every operation contributes equally to runtime.
+
+For the current small MLP, Python dispatch and array-allocation overhead are likely important contributors, but no separate autodiff profiler measurements have been reported.
+
+Any optimization should preserve the existing gradient-checking, broadcasting, and masked-weight correctness tests.
+
+The current implementation is therefore appropriate as an educational and experimental reference, rather than as a production-scale automatic differentiation framework.
+
+## Multi-Tenant Inference Serving Architecture
+
+The current AQUA implementation is an experimental training and benchmarking framework. It does not include a production inference API, distributed scheduler, or multi-tenant serving infrastructure.
+
+To deploy self-pruned models in an enterprise AI platform, I would separate offline model training and pruning from online inference.
+
+### Model Artifact and Registry
+
+Training would produce an immutable model artifact containing:
+
+- Architecture configuration and tensor shapes
+- Trained weights and biases
+- Binary pruning masks
+- Sparse representation metadata, when applicable
+- Model version, training configuration, and reproducibility information
+
+A model registry would track versions, compatibility, validation status, and deployment eligibility.
+
+Before deployment, each model would undergo correctness checks, including numerical comparison between its reference masked-dense inference path and the chosen production inference implementation.
+
+### Request Routing and Tenant Isolation
+
+Requests would enter through an API gateway responsible for authentication, authorization, and rate limiting.
+
+Every request would carry an authenticated tenant identity.
+
+A serving scheduler would enforce per-tenant concurrency limits, quotas, and fair queueing policies to reduce the risk of one high-volume tenant degrading service for others.
+
+Where stronger isolation is required, tenants could receive dedicated serving pools rather than shared workers.
+
+Tenant data must remain isolated, and observability records should avoid exposing sensitive request content.
+
+### Batching and Model Execution
+
+Serving workers would load validated model versions once and reuse them across requests.
+
+Compatible requests targeting the same model version and execution shape could be dynamically batched.
+
+The scheduler would balance batch throughput against latency targets using bounded queues and maximum batching delays.
+
+For small networks, batching may improve hardware utilization, but batch sizes must be chosen through measurement rather than assumption.
+
+### Sparse Versus Dense Execution
+
+The current experiments show that sparse-aware inference reduces the number of weight multiplications but runs slower than optimized dense NumPy inference for the evaluated architecture.
+
+Therefore, sparsity alone would not justify deploying the current Python sparse implementation as a latency optimization.
+
+A production system would benchmark several execution strategies:
+
+1. Optimized dense inference using precomputed effective weights
+2. Compiled sparse inference using an appropriate sparse data representation
+3. Structured pruning with kernel-friendly matrix dimensions
+
+The execution backend would be selected using measured latency, throughput, memory consumption, and hardware utilization at representative traffic levels.
+
+A dense implementation could remain the preferred deployment choice when sparse execution overhead outweighs its arithmetic savings.
+
+### Scalability and Reliability
+
+Serving workers would scale horizontally using observed concurrency, utilization, queue depth, and latency measurements.
+
+The system would support:
+
+- Model warmup before accepting production traffic
+- Versioned deployment and rollback
+- Health checks and readiness probes
+- Request timeouts and backpressure
+- Capacity limits and overload protection
+- Canary deployments for newly pruned models
+
+A production rollout would compare sparse and dense deployment candidates using representative workloads rather than relying only on offline accuracy.
+
+### Monitoring and Service-Level Objectives
+
+Metrics would include:
+
+- Request throughput
+- P50, P95, and P99 inference latency
+- Queueing delay
+- Error and timeout rates
+- Memory utilization
+- Model loading time
+- Active-parameter count and sparsity
+- Accuracy or model-quality indicators when ground truth becomes available
+
+Metrics should be segmented by model version, execution backend, and tenant where operationally appropriate.
+
+This design aims to make pruning an independently measurable optimization rather than assuming that fewer parameters always produce lower serving cost.
+
+### Deployment Boundary
+
+These components describe a proposed production architecture, not features already implemented in this repository.
+
+The existing AQUA prototype demonstrates the numerical foundations, training behavior, pruning correctness, and local inference cost comparisons needed before considering such deployment.
+
 ## 17. Future Improvements
 
 Potential extensions include:
