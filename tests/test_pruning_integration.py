@@ -135,3 +135,69 @@ def test_optimizer_state_stays_masked():
             optimizer.v[index][~layer.mask],
             0.0
         )
+
+
+def test_revived_connection_resets_adam_state():
+    model, optimizer, pruner = make_system()
+
+    layer = model.layer1
+    parameter_index = pruner.parameter_indices[0]
+    position = (0, 0)
+
+    # Populate Adam's moments with a known gradient.
+    optimizer.zero_grad()
+    layer.weight.grad = np.ones_like(layer.weight.data)
+    optimizer.step()
+
+    assert optimizer.m[parameter_index][position] != 0.0
+    assert optimizer.v[parameter_index][position] != 0.0
+
+    # Prune one connection.
+    pruned_mask = layer.mask.copy()
+    pruned_mask[position] = False
+
+    layer.set_mask(pruned_mask)
+    optimizer.set_mask(parameter_index, pruned_mask)
+
+    assert layer.weight.data[position] == 0.0
+    assert optimizer.m[parameter_index][position] == 0.0
+    assert optimizer.v[parameter_index][position] == 0.0
+
+    # Even an accidentally supplied gradient must not
+    # update an inactive connection.
+    optimizer.zero_grad()
+    layer.weight.grad[position] = 10.0
+    optimizer.step()
+
+    assert layer.weight.data[position] == 0.0
+    assert optimizer.m[parameter_index][position] == 0.0
+    assert optimizer.v[parameter_index][position] == 0.0
+
+    # Reactivate the connection through the mask APIs.
+    revived_mask = layer.mask.copy()
+    revived_mask[position] = True
+
+    layer.set_mask(revived_mask)
+    optimizer.set_mask(parameter_index, revived_mask)
+
+    # Old momentum must not survive reactivation.
+    assert layer.weight.data[position] == 0.0
+    assert optimizer.m[parameter_index][position] == 0.0
+    assert optimizer.v[parameter_index][position] == 0.0
+
+    # With zero new gradient, the revived weight
+    # must remain zero.
+    optimizer.zero_grad()
+    optimizer.step()
+
+    assert layer.weight.data[position] == 0.0
+
+    # A fresh gradient should allow the revived
+    # weight to update again.
+    optimizer.zero_grad()
+    layer.weight.grad[position] = 1.0
+    optimizer.step()
+
+    assert layer.weight.data[position] < 0.0
+    assert optimizer.m[parameter_index][position] > 0.0
+    assert optimizer.v[parameter_index][position] > 0.0
