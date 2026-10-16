@@ -119,6 +119,24 @@ Future optimizer updates preserve those zero values.
 
 Although the optimizer includes mask-transition support, the AQUA pruning experiments use permanent pruning without regrowth.
 
+### 5.1 Optimizer State Under Pruning and Reactivation
+
+The optimizer maintains a binary mask for each trainable parameter.
+
+When a connection becomes inactive, its stored weight, first moment, and second moment are reset to zero. Subsequent optimizer steps enforce the mask, preventing stale momentum from updating the pruned connection.
+
+The optimizer also supports reactivation through its mask API. When a connection changes from inactive to active, its parameter value and moment estimates are initialized to zero, preventing historical momentum from carrying into its new active period.
+
+This behavior is covered by automated tests for pruning, continued training, and mask reactivation.
+
+**Limitation:** The current Adam implementation uses a global optimizer timestep for bias correction. A reactivated connection therefore begins with zero moment estimates but uses the existing global timestep rather than a new connection-specific timestep.
+
+As a result, reactivation is not mathematically equivalent to initializing a new Adam parameter at timestep one.
+
+A more complete regrowth implementation could maintain per-connection update ages or explicitly define an alternative bias-correction policy. Such an extension would require additional numerical tests and stability experiments.
+
+The main AQUA pruning experiments do not reactivate connections, so this limitation does not affect their permanent-pruning update rule.
+
 ## 6. Masked Neural Network Computation
 
 For a Linear layer, the effective weight matrix is:
@@ -368,7 +386,7 @@ The test suite covers:
 - Permanent zero values for pruned weights
 - Zero optimizer moments for inactive connections
 
-The development suite contains 73 tests.
+The development suite contains 74 tests.
 
 Some inference tests depend on saved experiment checkpoints.
 
@@ -414,7 +432,7 @@ The sparse inference implementation favors transparency and correctness over hig
 
 A compiled sparse kernel or larger model could produce a different performance trade-off, but that has not been demonstrated here.
 
-## Autodiff Engine Bottlenecks and Optimization Strategy
+## 17. Autodiff Engine Bottlenecks and Optimization Strategy
 
 The custom autodiff engine prioritizes numerical correctness, simplicity, and inspectability over runtime performance.
 
@@ -449,7 +467,7 @@ Any optimization should preserve the existing gradient-checking, broadcasting, a
 
 The current implementation is therefore appropriate as an educational and experimental reference, rather than as a production-scale automatic differentiation framework.
 
-## Multi-Tenant Inference Serving Architecture
+## 18. Multi-Tenant Inference Serving Architecture
 
 The current AQUA implementation is an experimental training and benchmarking framework. It does not include a production inference API, distributed scheduler, or multi-tenant serving infrastructure.
 
@@ -545,7 +563,7 @@ These components describe a proposed production architecture, not features alrea
 
 The existing AQUA prototype demonstrates the numerical foundations, training behavior, pruning correctness, and local inference cost comparisons needed before considering such deployment.
 
-## 17. Future Improvements
+## 19. Future Improvements
 
 Potential extensions include:
 
@@ -560,7 +578,7 @@ Potential extensions include:
 - Carefully controlled connection regrowth
 - Compiled or hardware-optimized sparse inference
 
-## 18. Conclusion
+## 20. Conclusion
 
 AQUA demonstrates an end-to-end implementation of gradual global neural network pruning using custom automatic differentiation and optimization.
 

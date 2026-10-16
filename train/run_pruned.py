@@ -347,7 +347,7 @@ def train():
     )
     plt.xlabel("Epoch")
     plt.ylabel("Cross-entropy loss")
-    plt.title("Taylor Pruning: Loss")
+    plt.title(f"{METHOD.capitalize()} Pruning: Loss")
     plt.legend()
     plt.tight_layout()
     plt.savefig(output_dir / "loss_curve.png", dpi=160)

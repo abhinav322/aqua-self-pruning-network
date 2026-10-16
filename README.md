@@ -71,7 +71,7 @@ python -m pip install -r requirements.txt
 python -m pytest tests/ -q
 ```
 
-The development test suite contains 73 tests covering autodiff, loss functions, optimizer behavior, pruning, and sparse inference.
+The development test suite contains 74 tests covering autodiff, loss functions, optimizer behavior, pruning, and sparse inference.
 
 The suite also includes checkpoint-dependent tests using trained models saved under `results/sweep_full_v1/`.
 
