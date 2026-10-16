@@ -1,4 +1,4 @@
-
+import os
 import csv
 from pathlib import Path
 
@@ -29,12 +29,19 @@ EPOCHS = 200
 BATCH_SIZE = 32
 LEARNING_RATE = 0.01
 
-TARGET_SPARSITY = 0.75
+TARGET_SPARSITY = float(
+    os.environ.get("AQUA_TARGET_SPARSITY", "0.75")
+)
 PRUNE_START = 20
 PRUNE_END = 140
 PRUNE_EVERY = 5
 
-METHOD = "taylor"
+METHOD = os.environ.get(
+    "AQUA_METHOD", "taylor"
+).lower()
+
+if METHOD not in {"taylor", "magnitude"}:
+    raise ValueError("Method must be taylor or magnitude")
 
 
 def prepare_data():
@@ -278,7 +285,9 @@ def train():
         model, X_test, y_test
     )
 
-    output_dir = Path("results/pruned_taylor_75")
+    output_dir = Path(
+        f"results/pruned_{METHOD}_{int(TARGET_SPARSITY * 100)}"
+    )
     output_dir.mkdir(parents=True, exist_ok=True)
 
     with open(
