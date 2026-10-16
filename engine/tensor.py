@@ -359,3 +359,101 @@ class Tensor:
 
         return result
 
+    
+    def mean(self):
+        result = Tensor(
+            np.mean(self.data),
+            requires_grad=self.requires_grad,
+            parents=(self,),
+            operation="mean"
+        )
+
+        def _backward():
+            if result.grad is None:
+                return
+
+            if self.requires_grad:
+                if self.grad is None:
+                    self.grad = np.zeros_like(self.data)
+
+                gradient = (
+                    np.ones_like(self.data)
+                    * result.grad
+                    / self.data.size
+                )
+
+                self.grad += gradient
+
+        result._backward = _backward
+
+        return result
+
+    
+    def relu(self):
+        # Forward pass
+        result = Tensor(
+            np.maximum(0.0, self.data),
+            requires_grad=self.requires_grad,
+            parents=(self,),
+            operation="relu"
+        )
+
+        def _backward():
+            if result.grad is None:
+                return
+
+            if self.requires_grad:
+                if self.grad is None:
+                    self.grad = np.zeros_like(self.data)
+
+                # ReLU derivative is 1 for positive inputs
+                # and 0 for zero or negative inputs.
+                derivative = (self.data > 0).astype(np.float64)
+
+                self.grad += result.grad * derivative
+
+        result._backward = _backward
+
+        return result
+
+    
+    def sigmoid(self):
+        # Numerically stable sigmoid implementation.
+        positive = self.data >= 0
+
+        output = np.empty_like(self.data)
+
+        # For nonnegative inputs.
+        output[positive] = (
+            1.0 / (1.0 + np.exp(-self.data[positive]))
+        )
+
+        # For negative inputs, avoid exp(large positive).
+        exp_x = np.exp(self.data[~positive])
+
+        output[~positive] = exp_x / (1.0 + exp_x)
+
+        result = Tensor(
+            output,
+            requires_grad=self.requires_grad,
+            parents=(self,),
+            operation="sigmoid"
+        )
+
+        def _backward():
+            if result.grad is None:
+                return
+
+            if self.requires_grad:
+                if self.grad is None:
+                    self.grad = np.zeros_like(self.data)
+
+                derivative = output * (1.0 - output)
+
+                self.grad += result.grad * derivative
+
+        result._backward = _backward
+
+        return result
+
+
