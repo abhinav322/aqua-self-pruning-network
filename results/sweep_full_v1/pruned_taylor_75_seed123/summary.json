@@ -1,0 +1,16 @@
+{
+    "seed": 123,
+    "method": "taylor",
+    "target_sparsity": 0.75,
+    "achieved_sparsity": 0.75,
+    "total_weights": 128,
+    "removed_weights": 96,
+    "active_weights": 32,
+    "epochs": 200,
+    "batch_size": 32,
+    "learning_rate": 0.01,
+    "train_accuracy": 0.996875,
+    "validation_accuracy": 0.9875,
+    "test_accuracy": 1.0,
+    "test_loss": 0.006852932599759685
+}

@@ -1,0 +1,16 @@
+{
+    "seed": 123,
+    "method": "magnitude",
+    "target_sparsity": 0.95,
+    "achieved_sparsity": 0.9453125,
+    "total_weights": 128,
+    "removed_weights": 121,
+    "active_weights": 7,
+    "epochs": 200,
+    "batch_size": 32,
+    "learning_rate": 0.01,
+    "train_accuracy": 0.709375,
+    "validation_accuracy": 0.7375,
+    "test_accuracy": 0.725,
+    "test_loss": 0.50836957597457
+}

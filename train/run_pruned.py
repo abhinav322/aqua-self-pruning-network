@@ -1,4 +1,5 @@
 import os
+import json
 import csv
 from pathlib import Path
 
@@ -200,13 +201,16 @@ def train():
 
         # Prune only after all training updates
         # for this epoch are finished.
+        
         should_prune = (
-            PRUNE_START < epoch <= PRUNE_END
+            TARGET_SPARSITY > 0.0
+            and PRUNE_START < epoch <= PRUNE_END
             and (
                 (epoch - PRUNE_START) % PRUNE_EVERY == 0
                 or epoch == PRUNE_END
             )
         )
+
 
         if should_prune:
             target = cubic_sparsity(
@@ -294,10 +298,13 @@ def train():
         else ""
     )
 
-    output_dir = Path(
-        f"results/pruned_{METHOD}_"
-        f"{int(TARGET_SPARSITY * 100)}"
-        f"{seed_suffix}"
+    output_root = Path(
+        os.environ.get("AQUA_OUTPUT_ROOT", "results")
+    )
+
+    output_dir = output_root / (
+        f"pruned_{METHOD}_"
+        f"{int(TARGET_SPARSITY * 100)}_seed{SEED}"
     )
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -357,6 +364,39 @@ def train():
     plt.tight_layout()
     plt.savefig(output_dir / "sparsity_curve.png", dpi=160)
     plt.close()
+
+    
+    # Structured summary for automated experiments.
+    summary = {
+        "seed": SEED,
+        "method": METHOD,
+        "target_sparsity": TARGET_SPARSITY,
+        "achieved_sparsity": pruner.achieved_sparsity(),
+        "total_weights": pruner.total_weights,
+        "removed_weights": int(actual_removed),
+        "active_weights": int(
+            pruner.total_weights - actual_removed
+        ),
+        "epochs": EPOCHS,
+        "batch_size": BATCH_SIZE,
+        "learning_rate": LEARNING_RATE,
+        "train_accuracy": float(
+            history[-1]["train_accuracy"]
+        ),
+        "validation_accuracy": float(
+            history[-1]["val_accuracy"]
+        ),
+        "test_accuracy": float(test_acc),
+        "test_loss": float(test_loss),
+    }
+
+    with open(
+        output_dir / "summary.json",
+        "w",
+        encoding="utf-8"
+    ) as file:
+        json.dump(summary, file, indent=4)
+
 
     print("\nFINAL RESULTS")
     print(f"Method: {METHOD}")
