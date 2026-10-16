@@ -24,7 +24,10 @@ from train.dataset import (
 )
 
 
-SEED = 42
+SEED = int(os.environ.get("AQUA_SEED", "42"))
+
+if SEED < 0:
+    raise ValueError("Seed must be non-negative")
 EPOCHS = 200
 BATCH_SIZE = 32
 LEARNING_RATE = 0.01
@@ -285,8 +288,16 @@ def train():
         model, X_test, y_test
     )
 
+    seed_suffix = (
+        f"_seed{SEED}"
+        if "AQUA_SEED" in os.environ
+        else ""
+    )
+
     output_dir = Path(
-        f"results/pruned_{METHOD}_{int(TARGET_SPARSITY * 100)}"
+        f"results/pruned_{METHOD}_"
+        f"{int(TARGET_SPARSITY * 100)}"
+        f"{seed_suffix}"
     )
     output_dir.mkdir(parents=True, exist_ok=True)
 
