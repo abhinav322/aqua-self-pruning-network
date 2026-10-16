@@ -19,3 +19,5 @@ __pycache__/
 # Local environment variables and secrets
 .env
 .env.*
+
+results/sweep_v1/
