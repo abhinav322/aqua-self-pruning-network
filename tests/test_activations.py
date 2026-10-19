@@ -154,3 +154,30 @@ def test_sigmoid_extreme_values():
     y.sum().backward()
 
     assert np.all(np.isfinite(x.grad))
+
+def test_sum_gradient():
+    values = np.array([
+        [1.0, -2.0, 3.0],
+        [4.0, 5.0, -6.0]
+    ])
+
+    x = Tensor(values, requires_grad=True)
+
+    loss = x.sum()
+    loss.backward()
+
+    expected = np.ones_like(values)
+
+    np.testing.assert_allclose(x.grad, expected)
+
+    numeric = numerical_gradient(
+        lambda v: np.sum(v),
+        values
+    )
+
+    np.testing.assert_allclose(
+        x.grad,
+        numeric,
+        rtol=1e-5,
+        atol=1e-7
+    )
