@@ -383,7 +383,7 @@ The test suite covers:
 
 - Arithmetic operation gradients
 - Broadcasting and shared-graph gradients
-- Numerical gradient checks
+- Numerical gradient checks, including an independent finite-difference check for sum reduction
 - Activation function gradients
 - Stable cross-entropy
 - Adam updates and optimizer state handling
@@ -396,7 +396,7 @@ The test suite covers:
 - Permanent zero values for pruned weights
 - Zero optimizer moments for inactive connections
 
-The development suite contains 75 tests.
+The development suite contains 76 tests.
 
 Some inference tests depend on saved experiment checkpoints.
 
