@@ -121,21 +121,31 @@ Although the optimizer includes mask-transition support, the AQUA pruning experi
 
 ### 5.1 Optimizer State Under Pruning and Reactivation
 
-The optimizer maintains a binary mask for each trainable parameter.
+The Adam optimizer maintains a binary activity mask, first-moment estimates, second-moment estimates, and per-element update counters for each trainable parameter.
 
-When a connection becomes inactive, its stored weight, first moment, and second moment are reset to zero. Subsequent optimizer steps enforce the mask, preventing stale momentum from updating the pruned connection.
+When a connection becomes inactive, its stored weight, first moment, second moment, and update counter are reset to zero. Subsequent optimizer steps keep the inactive connection at zero and do not advance its update counter.
 
-The optimizer also supports reactivation through its mask API. When a connection changes from inactive to active, its parameter value and moment estimates are initialized to zero, preventing historical momentum from carrying into its new active period.
+When a connection is reactivated through the mask API, these values remain reset. The connection's first subsequent optimizer update therefore uses a local timestep of one for Adam bias correction.
 
-This behavior is covered by automated tests for pruning, continued training, and mask reactivation.
+For connection (i), the bias-corrected moments use its own active update count (t_i):
 
-**Limitation:** The current Adam implementation uses a global optimizer timestep for bias correction. A reactivated connection therefore begins with zero moment estimates but uses the existing global timestep rather than a new connection-specific timestep.
+[
+\hat{m}_i = \frac{m_i}{1-\beta_1^{t_i}}
+]
 
-As a result, reactivation is not mathematically equivalent to initializing a new Adam parameter at timestep one.
+[
+\hat{v}_i = \frac{v_i}{1-\beta_2^{t_i}}
+]
 
-A more complete regrowth implementation could maintain per-connection update ages or explicitly define an alternative bias-correction policy. Such an extension would require additional numerical tests and stability experiments.
+This prevents a recently reactivated connection from incorrectly inheriting the global optimizer timestep after its moment estimates have been reset.
 
-The main AQUA pruning experiments do not reactivate connections, so this limitation does not affect their permanent-pruning update rule.
+A dedicated numerical regression test verifies that the first update after reactivation matches the first update of a freshly initialized Adam parameter under the same gradient and optimizer configuration.
+
+The implementation also verifies that continuously active connections retain their update histories.
+
+Scope: The global pruning controller uses permanent pruning and does not automatically reactivate connections. The optimizer supports correct bias correction when connections are explicitly reactivated through its mask API, but AQUA does not implement an automated regrowth selection algorithm.
+
+The complete 27-experiment training sweep was rerun after this optimizer change. Its saved numerical CSV matched the original results exactly, providing regression evidence that the permanent-pruning experiments were unaffected.
 
 ## 6. Masked Neural Network Computation
 
@@ -386,7 +396,7 @@ The test suite covers:
 - Permanent zero values for pruned weights
 - Zero optimizer moments for inactive connections
 
-The development suite contains 74 tests.
+The development suite contains 75 tests.
 
 Some inference tests depend on saved experiment checkpoints.
 

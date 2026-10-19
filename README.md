@@ -12,7 +12,7 @@ The project investigates whether neural connections can be progressively removed
 - Stable softmax cross-entropy
 - Multilayer perceptron with ReLU activations
 - Adam optimizer implemented from scratch
-- Binary weight masks with optimizer-state synchronization
+- Binary weight masks with optimizer-state synchronization and per-connection Adam bias correction
 - Global magnitude and Taylor-sensitivity pruning
 - Cubic gradual pruning schedule
 - Reproducible multi-seed experiments
@@ -71,7 +71,7 @@ python -m pip install -r requirements.txt
 python -m pytest tests/ -q
 ```
 
-The development test suite contains 74 tests covering autodiff, loss functions, optimizer behavior, pruning, and sparse inference.
+The development test suite contains 75 tests covering autodiff, loss functions, optimizer behavior, pruning, and sparse inference.
 
 The suite also includes checkpoint-dependent tests using trained models saved under `results/sweep_full_v1/`.
 
