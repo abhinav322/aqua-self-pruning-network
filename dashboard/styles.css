@@ -228,3 +228,128 @@ h2 {
     flex-direction: column;
   }
 }
+/* ==================================================
+   AQUA Observatory — Layout Redesign
+   ================================================== */
+
+@media (min-width: 1101px) {
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    align-items: start;
+    gap: 20px;
+  }
+
+  .dashboard-grid > .controls-card {
+    grid-column: span 3;
+    grid-row: auto;
+  }
+
+  .dashboard-grid > .network-card {
+    grid-column: span 6;
+  }
+
+  .dashboard-grid > .metrics-card {
+    grid-column: span 3;
+  }
+
+  .dashboard-grid > .chart-card {
+    grid-column: span 7;
+  }
+
+  .dashboard-grid > .comparison-card {
+    grid-column: span 5;
+  }
+
+  .dashboard-grid > .efficiency-lab {
+    grid-column: 1 / -1;
+  }
+
+  .dashboard-grid > .insights-card {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1101px) {
+  .controls-card,
+  .network-card,
+  .metrics-card {
+    min-height: 485px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-grid > .controls-card,
+  .dashboard-grid > .network-card,
+  .dashboard-grid > .metrics-card,
+  .dashboard-grid > .chart-card,
+  .dashboard-grid > .comparison-card,
+  .dashboard-grid > .efficiency-lab,
+  .dashboard-grid > .insights-card {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+}
+
+
+/* AQUA Observatory — Insight Section Polish */
+
+.insights-card {
+  min-height: auto;
+}
+
+.insights-card h2 {
+  margin-bottom: 20px;
+}
+
+.insights-card ul {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.insights-card li {
+  background: rgba(15, 29, 50, 0.9);
+  border: 1px solid rgba(120, 170, 255, 0.14);
+  border-radius: 15px;
+  padding: 20px;
+  min-height: 115px;
+  color: #c6d5e9;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.insights-card li:nth-child(1) {
+  border-top: 2px solid #43e7ff;
+}
+
+.insights-card li:nth-child(2) {
+  border-top: 2px solid #ad7bff;
+}
+
+.insights-card li:nth-child(3) {
+  border-top: 2px solid #3ce39a;
+}
+
+.insights-card li:nth-child(4) {
+  border-top: 2px solid #65a8ff;
+}
+
+@media (max-width: 1100px) {
+  .insights-card ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .insights-card ul {
+    grid-template-columns: 1fr;
+  }
+}
