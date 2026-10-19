@@ -1,0 +1,132 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AQUA Observatory</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+    <div class="app-shell">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">AQUA Platform</p>
+                <h1>AQUA Observatory</h1>
+                <p class="subtitle">
+                    Watch intelligence become sparse. Explore real pruning experiments,
+                    masks, metrics, and trade-offs from the AQUA self-pruning network.
+                </p>
+            </div>
+            <div class="topbar-badge">
+                <span>Interactive experiment explorer</span>
+            </div>
+        </header>
+
+        <main class="dashboard-grid">
+            <section class="card controls-card">
+                <h2>Experiment Controls</h2>
+
+                <div class="control-group">
+                    <label for="seedSelect">Seed</label>
+                    <select id="seedSelect">
+                        <option value="42">42</option>
+                        <option value="123">123</option>
+                        <option value="2026">2026</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="methodSelect">Method</label>
+                    <select id="methodSelect">
+                        <option value="magnitude">Magnitude</option>
+                        <option value="taylor" selected>Taylor</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="sparsitySelect">Target Sparsity</label>
+                    <select id="sparsitySelect">
+                        <option value="0.0">0%</option>
+                        <option value="0.5">50%</option>
+                        <option value="0.75" selected>75%</option>
+                        <option value="0.9">90%</option>
+                        <option value="0.95">95%</option>
+                    </select>
+                </div>
+
+                <div class="control-note">
+                    This dashboard will display recorded AQUA experiment outputs, not live training.
+                </div>
+            </section>
+
+            <section class="card network-card">
+                <div class="section-header">
+                    <div>
+                        <p class="section-kicker">Core Visualization</p>
+                        <h2>Network Connectivity</h2>
+                    </div>
+                    <div class="status-pill" id="statusPill">Loading recorded model view</div>
+                </div>
+
+                <div id="networkCanvas" class="network-canvas">
+                    <div class="network-placeholder">
+                        2 â†’ 32 â†’ 2 network visualization will appear here
+                    </div>
+                </div>
+            </section>
+
+            <section class="card metrics-card">
+                <h2>Experiment Snapshot</h2>
+                <div class="metrics-grid">
+                    <div class="metric-box">
+                        <span class="metric-label">Test Accuracy</span>
+                        <span class="metric-value" id="testAccuracy">--</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Achieved Sparsity</span>
+                        <span class="metric-value" id="achievedSparsity">--</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Active Weights</span>
+                        <span class="metric-value" id="activeWeights">--</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Removed Weights</span>
+                        <span class="metric-value" id="removedWeights">--</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card chart-card">
+                <h2>Training Replay</h2>
+                <div class="chart-placeholder">
+                    Loss / accuracy / sparsity visualizations will go here
+                </div>
+            </section>
+
+            <section class="card comparison-card">
+                <h2>Method Comparison</h2>
+                <div class="comparison-placeholder">
+                    Magnitude vs Taylor comparison at matched sparsity will go here
+                </div>
+            </section>
+
+            <section class="card insights-card">
+                <h2>Why it matters</h2>
+                <ul>
+                    <li>See which connections survive pruning in the final network.</li>
+                    <li>Compare magnitude and Taylor pruning at the same sparsity level.</li>
+                    <li>Understand when sparsity preserves accuracy and when it breaks down.</li>
+                    <li>Explore real AQUA results using saved experiment outputs.</li>
+                </ul>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+  <script src="efficiency.js"></script>
+</body>
+
+</html>
