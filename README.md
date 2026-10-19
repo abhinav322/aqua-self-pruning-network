@@ -5,6 +5,22 @@ A lightweight neural network framework implemented from scratch using Python and
 
 The project investigates whether neural connections can be progressively removed during training while preserving classification performance.
 
+## Live Interactive Dashboard
+
+**[Launch AQUA Observatory - Interactive Demo](https://abhinav322.github.io/aqua-self-pruning-network/)**
+
+Explore the self-pruning neural network through an interactive dashboard built from actual recorded experiments.
+
+The dashboard includes:
+
+- Interactive network connectivity and pruning-mask visualization
+- Training replay across 200 recorded epochs
+- Magnitude versus Taylor pruning comparisons across multiple seeds
+- Accuracy, sparsity, and connection-survival metrics
+- Inference efficiency benchmarks covering arithmetic reduction, memory usage, and measured latency
+
+The dashboard displays recorded experimental results rather than performing live model training.
+
 ## Features
 
 - Custom reverse-mode automatic differentiation engine
