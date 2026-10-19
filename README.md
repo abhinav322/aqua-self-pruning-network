@@ -270,6 +270,7 @@ prune/     Importance scoring, controller, schedule
 train/     Dataset generation, training, sweeps, benchmarks
 tests/     Unit tests and integration tests
 results/   Experimental artifacts and figures
+dashboard/ Interactive Observatory and exported experiment data
 ```
 
 ## Limitations
