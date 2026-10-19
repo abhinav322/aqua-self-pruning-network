@@ -37,6 +37,13 @@ class Adam:
             for p in self.parameters
         ]
 
+        # Track the number of Adam updates received
+        # by each individual parameter element.
+        self.step_counts = [
+            np.zeros_like(p.data, dtype=np.int64)
+            for p in self.parameters
+        ]
+
         # True means that the connection is active.
         self.masks = [
             np.ones_like(p.data, dtype=bool)
@@ -66,6 +73,14 @@ class Adam:
 
         # Identify connections whose active status changed.
         changed = old_mask != new_mask
+
+        # Reset the Adam update age whenever a connection
+        # is pruned or reactivated.
+        self.step_counts[parameter_index] = np.where(
+            changed,
+            0,
+            self.step_counts[parameter_index]
+        )
 
         # Reset newly pruned or revived connections.
         self.m[parameter_index] = np.asarray(
@@ -135,13 +150,23 @@ class Adam:
                 dtype=np.float64
             )
 
-            # Bias correction.
+            # Advance update ages only for active connections.
+            self.step_counts[i] += mask.astype(np.int64)
+
+            # Each active connection uses its own update count
+            # for Adam bias correction.
+            local_t = self.step_counts[i]
+
+            # Avoid dividing by zero for inactive connections.
+            safe_t = np.maximum(local_t, 1)
+
+            # Bias correction using per-connection timesteps.
             m_hat = self.m[i] / (
-                1.0 - self.beta1**self.t
+                1.0 - np.power(self.beta1, safe_t)
             )
 
             v_hat = self.v[i] / (
-                1.0 - self.beta2**self.t
+                1.0 - np.power(self.beta2, safe_t)
             )
 
             # Adam parameter update.
